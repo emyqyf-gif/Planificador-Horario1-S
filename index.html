@@ -3,55 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Horario 2025</title>
+    <title>Simulador Horario 2025 - Por Bloques</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f1f5f9; --text: #1e293b; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --border: #cbd5e1; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; height: 100vh; display: flex; overflow: hidden; }
         
-        /* Layout */
-        .sidebar { width: 320px; background: white; border-right: 1px solid #cbd5e1; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        /* Sidebar */
+        .sidebar { width: 340px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
         .sidebar-header { padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; }
-        .sidebar-header h1 { margin: 0; font-size: 1.2rem; color: var(--primary); }
+        .sidebar-header h1 { margin: 0; font-size: 1.4rem; color: var(--primary); }
         .sidebar-content { flex: 1; overflow-y: auto; padding: 20px; }
         
-        .main-content { flex: 1; overflow: auto; padding: 20px; position: relative; }
-
         /* Tarjetas de Asignatura */
-        .subject-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; transition: all 0.2s; }
-        .subject-card:hover { border-color: #94a3b8; }
-        .subject-title { font-weight: 700; font-size: 0.85rem; display: block; margin-bottom: 6px; color: #334155; }
+        .subject-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 15px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .subject-card:hover { border-color: #94a3b8; box-shadow: 0 4px 8px rgba(0,0,0,0.05); transform: translateY(-1px); }
+        .subject-title { font-weight: 700; font-size: 0.9rem; display: block; margin-bottom: 8px; color: #334155; }
         
-        select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.8rem; }
-        .info-box { font-size: 0.75rem; margin-top: 8px; color: #64748b; background: #f1f5f9; padding: 6px; border-radius: 4px; display: none; }
+        select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.85rem; cursor: pointer; }
+        select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        
+        .info-box { font-size: 0.8rem; margin-top: 10px; color: #475569; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; border-left: 3px solid var(--primary); display: none; }
         .info-box.active { display: block; }
 
-        /* Grilla */
-        .schedule-container { min-width: 800px; background: white; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e2e8f0; }
-        .grid { display: grid; grid-template-columns: 50px repeat(6, 1fr); grid-template-rows: 40px repeat(14, 1fr); gap: 1px; background: #e2e8f0; }
+        /* Área Principal */
+        .main-content { flex: 1; overflow: auto; padding: 20px; position: relative; }
+        .schedule-container { min-width: 900px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e2e8f0; }
         
-        .cell-header { background: #f8fafc; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #475569; }
-        .cell-time { background: white; color: #94a3b8; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
-        .cell-day { background: white; position: relative; height: 50px; } /* Altura base por hora */
-
-        /* Bloques */
-        .class-block {
-            position: absolute; left: 2px; right: 2px; padding: 4px 6px;
-            border-radius: 5px; color: white; font-size: 0.75rem;
-            overflow: hidden; cursor: default;
-            display: flex; flex-direction: column; justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        /* La Grilla Mágica */
+        .grid { display: grid; grid-template-columns: 100px repeat(6, 1fr); /* Columna hora ancha + 6 días */ gap: 1px; background: #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        
+        /* Celdas */
+        .cell-header { background: #f1f5f9; font-weight: bold; padding: 15px 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .cell-time { 
+            background: white; color: #64748b; font-size: 0.75rem; font-weight: 600; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            padding: 10px; line-height: 1.4; white-space: pre-wrap;
         }
-        .block-title { font-weight: bold; font-size: 0.7rem; line-height: 1.1; margin-bottom: 2px; }
-        .block-detail { font-size: 0.65rem; opacity: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
+        .cell-day { background: white; position: relative; min-height: 120px; /* AQUÍ SE CONTROLA LA ALTURA */ }
+
+        /* Bloques de Clase */
+        .class-block {
+            position: absolute; top: 4px; bottom: 4px; left: 4px; right: 4px;
+            border-radius: 8px; color: white; padding: 8px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 5;
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .block-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 4px; line-height: 1.2; }
+        .block-detail { font-size: 0.75rem; opacity: 0.95; margin-bottom: 2px; }
+        .block-nrc { font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
     <div class="sidebar-header">
-        <h1>Mi Horario 2025</h1>
-        <p style="font-size: 0.75rem; color: #666; margin: 5px 0 0 0;">Selecciona tus secciones (NRC)</p>
+        <h1>Simulador 2025</h1>
+        <p style="font-size: 0.8rem; color: #666; margin: 5px 0 0 0;">Configura tu semestre ideal</p>
     </div>
     <div class="sidebar-content" id="controls">
         </div>
@@ -66,158 +80,180 @@
 
 <script>
     // ==========================================
-    // BASE DE DATOS (NRCs, PROFES, SALAS)
+    // 1. CONFIGURACIÓN DE LOS BLOQUES DE TIEMPO
     // ==========================================
-    // NOTA PARA TI: He puesto horarios "dummy" (tentativos). 
-    // Debes corregir "dia", "start" (inicio) y "end" (fin) en cada bloque.
-    // Lunes=1, Martes=2, ... Sábado=6
+    // Aquí defines los textos que aparecen a la izquierda
+    const bloquesHorarios = [
+        "08:00\n09:20",   // Bloque 1
+        "09:30\n10:50",   // Bloque 2
+        "11:00\n12:20",   // Bloque 3
+        "12:30\n13:50",   // Bloque 4
+        "14:40\n16:00",   // Bloque 5
+        "16:10\n17:30",   // Bloque 6
+        "17:35\n18:55"    // Bloque 7
+    ];
+
+    // ==========================================
+    // 2. BASE DE DATOS ACTUALIZADA
+    // ==========================================
+    /* CÓMO EDITAR:
+       Ahora en lugar de 'start' y 'end', usas 'bloques'.
+       - bloques: [1] -> Ocupa el primer bloque (8:00-9:20)
+       - bloques: [1, 2] -> Ocupa dos bloques seguidos.
+       - dia: 1=Lunes, 2=Martes...
+    */
     
     const materias = [
         {
-            id: "FIS_TEO", nombre: "FISIOLOGÍA INTEGRADA (TEO)", color: "#ef4444",
+            id: "FIS_TEO", nombre: "FISIOLOGÍA INTEGRADA (TEO)", color: "#dc2626", // Rojo
             secciones: [
-                { nrc: "11954", prof: "Alejandro Godoy", sala: "O204", horario: [{dia: 1, start: 8.5, end: 9.8}] },
-                { nrc: "11955", prof: "Felipe Olave", sala: "O205", horario: [{dia: 1, start: 8.5, end: 9.8}] },
-                { nrc: "16541", prof: "Verónica Torres", sala: "O204", horario: [{dia: 1, start: 8.5, end: 9.8}] },
-                { nrc: "16542", prof: "Felipe Olave", sala: "O205", horario: [{dia: 1, start: 8.5, end: 9.8}] }
+                { nrc: "11954", prof: "Alejandro Godoy", sala: "O204", horario: [{dia: 1, bloques: [1]}] }, // Lunes 8:00
+                { nrc: "11955", prof: "Felipe Olave", sala: "O205", horario: [{dia: 1, bloques: [1]}] },
+                { nrc: "16541", prof: "Verónica Torres", sala: "O204", horario: [{dia: 1, bloques: [1]}] },
+                { nrc: "16542", prof: "Felipe Olave", sala: "O205", horario: [{dia: 1, bloques: [1]}] }
             ]
         },
         {
-            id: "FIS_TAL", nombre: "FISIOLOGÍA INTEGRADA (TAL)", color: "#b91c1c",
+            id: "FIS_TAL", nombre: "FISIOLOGÍA INTEGRADA (TAL)", color: "#b91c1c", // Rojo Oscuro
             secciones: [
-                { nrc: "11960", prof: "Verónica Torres", sala: "P102", horario: [{dia: 5, start: 12.5, end: 13.5}] },
-                { nrc: "11957", prof: "Verónica Torres", sala: "P102", horario: [{dia: 5, start: 12.5, end: 13.5}] },
-                { nrc: "16544", prof: "Yasna Varetto", sala: "P105", horario: [{dia: 5, start: 12.5, end: 13.5}] },
-                { nrc: "16545", prof: "Mauricio Reyes", sala: "B102", horario: [{dia: 5, start: 12.5, end: 13.5}] },
-                { nrc: "16543", prof: "Mauricio Reyes", sala: "B102", horario: [{dia: 5, start: 12.5, end: 13.5}] },
-                { nrc: "11958", prof: "Álvaro Álvarez", sala: "P102", horario: [{dia: 5, start: 12.5, end: 13.5}] },
-                { nrc: "11959", prof: "Álvaro Álvarez", sala: "B102", horario: [{dia: 5, start: 12.5, end: 13.5}] }
+                // Ajusté esto al bloque 4 (12:30) según tu PDF anterior, cámbialo si es necesario
+                { nrc: "11960", prof: "Verónica Torres", sala: "P102", horario: [{dia: 5, bloques: [4]}] }, 
+                { nrc: "11957", prof: "Verónica Torres", sala: "P102", horario: [{dia: 5, bloques: [4]}] },
+                { nrc: "16544", prof: "Yasna Varetto", sala: "P105", horario: [{dia: 5, bloques: [4]}] },
+                { nrc: "16545", prof: "Mauricio Reyes", sala: "B102", horario: [{dia: 5, bloques: [4]}] },
+                { nrc: "16543", prof: "Mauricio Reyes", sala: "B102", horario: [{dia: 5, bloques: [4]}] },
+                { nrc: "11958", prof: "Álvaro Álvarez", sala: "P102", horario: [{dia: 5, bloques: [4]}] },
+                { nrc: "11959", prof: "Álvaro Álvarez", sala: "B102", horario: [{dia: 5, bloques: [4]}] }
             ]
         },
         {
-            id: "SAL_TEO", nombre: "SALUD POBLACIONAL (TEO)", color: "#3b82f6",
+            id: "SAL_TEO", nombre: "SALUD POBLACIONAL (TEO)", color: "#2563eb", // Azul
             secciones: [
-                { nrc: "16617", prof: "Sergio Rojas Garrido", sala: "O001", horario: [{dia: 1, start: 8.5, end: 11.0}] },
-                { nrc: "16618", prof: "Jean Gajardo Jauregui", sala: "B105", horario: [{dia: 1, start: 8.5, end: 11.0}] },
-                { nrc: "16619", prof: "Cristian Lisboa Donoso", sala: "P301", horario: [{dia: 1, start: 8.5, end: 11.0}] },
-                { nrc: "16620", prof: "Sergio Rojas Garrido", sala: "D001", horario: [{dia: 1, start: 8.5, end: 11.0}] },
-                { nrc: "16621", prof: "Jean Gajardo Jauregui", sala: "S003", horario: [{dia: 1, start: 8.5, end: 11.0}] },
-                { nrc: "16622", prof: "Carolina Moraga Paredes", sala: "S005", horario: [{dia: 1, start: 8.5, end: 11.0}] }
+                // Ocupa bloque 1 y 2 (8:30 a 11:00 aprox)
+                { nrc: "16617", prof: "Sergio Rojas", sala: "O001", horario: [{dia: 1, bloques: [1, 2]}] },
+                { nrc: "16618", prof: "Jean Gajardo", sala: "B105", horario: [{dia: 1, bloques: [1, 2]}] },
+                { nrc: "16619", prof: "Cristian Lisboa", sala: "P301", horario: [{dia: 1, bloques: [1, 2]}] },
+                { nrc: "16620", prof: "Sergio Rojas", sala: "D001", horario: [{dia: 1, bloques: [1, 2]}] },
+                { nrc: "16621", prof: "Jean Gajardo", sala: "S003", horario: [{dia: 1, bloques: [1, 2]}] },
+                { nrc: "16622", prof: "Carolina Moraga", sala: "S005", horario: [{dia: 1, bloques: [1, 2]}] }
             ]
         },
         {
-            id: "SAL_TAL", nombre: "SALUD POBLACIONAL (TAL)", color: "#2563eb",
+            id: "SAL_TAL", nombre: "SALUD POBLACIONAL (TAL)", color: "#1d4ed8", // Azul Oscuro
             secciones: [
-                { nrc: "16629", prof: "Matías Chavez", sala: "S102", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16630", prof: "Catalina Brieba", sala: "S104", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16631", prof: "Franco Fernández", sala: "S001", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16636", prof: "Amanda Fredes", sala: "S104", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16637", prof: "Catalina Brieba", sala: "S206", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16638", prof: "Franco Fernández", sala: "S106", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16639", prof: "Franco Fernández", sala: "S104", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16640", prof: "Catalina Brieba", sala: "S206", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16641", prof: "Amanda Fredes", sala: "S106", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16642", prof: "Franco Fernández", sala: "A definir", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16643", prof: "Franco Fernández", sala: "A definir", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16645", prof: "Catalina Brieba", sala: "S102", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16646", prof: "Elizabeth Gonzalez", sala: "S104", horario: [{dia: 1, start: 11.5, end: 13.0}] },
-                { nrc: "16647", prof: "Amanda Fredes", sala: "S106", horario: [{dia: 1, start: 11.5, end: 13.0}] }
+                // Bloque 3 (11:00 - 12:20)
+                { nrc: "16629", prof: "Matías Chavez", sala: "S102", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16630", prof: "Catalina Brieba", sala: "S104", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16631", prof: "Franco Fernández", sala: "S001", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16636", prof: "Amanda Fredes", sala: "S104", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16637", prof: "Catalina Brieba", sala: "S206", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16638", prof: "Franco Fernández", sala: "S106", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16639", prof: "Franco Fernández", sala: "S104", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16640", prof: "Catalina Brieba", sala: "S206", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16641", prof: "Amanda Fredes", sala: "S106", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16642", prof: "Franco Fernández", sala: "A def.", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16643", prof: "Franco Fernández", sala: "A def.", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16645", prof: "Catalina Brieba", sala: "S102", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16646", prof: "Elizabeth Gonzalez", sala: "S104", horario: [{dia: 1, bloques: [3]}] },
+                { nrc: "16647", prof: "Amanda Fredes", sala: "S106", horario: [{dia: 1, bloques: [3]}] }
             ]
         },
         {
-            id: "AUTO_COM", nombre: "AUTOCONFIANZA Y COM. EFECTIVA", color: "#d97706",
+            id: "AUTO_COM", nombre: "AUTOCONFIANZA Y COM.", color: "#d97706", // Naranja
             secciones: [
-                { nrc: "18030", prof: "A definir", sala: "S202", horario: [{dia: 3, start: 11.5, end: 13.0}] },
-                { nrc: "18033", prof: "A definir", sala: "S202", horario: [{dia: 3, start: 11.5, end: 13.0}] }
+                { nrc: "18030", prof: "A definir", sala: "S202", horario: [{dia: 3, bloques: [3]}] }, // Miercoles 11:00
+                { nrc: "18033", prof: "A definir", sala: "S202", horario: [{dia: 3, bloques: [3]}] }
             ]
         },
         {
-            id: "AUTO_GES", nombre: "AUTOCONFIANZA Y GESTIÓN EMOCIONAL", color: "#d97706",
+            id: "AUTO_GES", nombre: "AUTOCONFIANZA Y GESTIÓN", color: "#b45309",
             secciones: [
-                { nrc: "18037", prof: "A definir", sala: "S202", horario: [{dia: 3, start: 11.5, end: 13.0}] },
-                { nrc: "18039", prof: "A definir", sala: "S204", horario: [{dia: 3, start: 11.5, end: 13.0}] }
+                { nrc: "18037", prof: "A definir", sala: "S202", horario: [{dia: 3, bloques: [3]}] },
+                { nrc: "18039", prof: "A definir", sala: "S204", horario: [{dia: 3, bloques: [3]}] }
             ]
         },
         {
-            id: "AUTO_LID", nombre: "AUTOCONOCIMIENTO Y LIDERAZGO", color: "#d97706",
+            id: "AUTO_LID", nombre: "AUTOCONOCIMIENTO Y LID.", color: "#78350f",
             secciones: [
-                { nrc: "18036", prof: "A definir", sala: "S204", horario: [{dia: 3, start: 11.5, end: 13.0}] },
-                { nrc: "18035", prof: "A definir", sala: "S204", horario: [{dia: 3, start: 11.5, end: 13.0}] }
+                { nrc: "18036", prof: "A definir", sala: "S204", horario: [{dia: 3, bloques: [3]}] },
+                { nrc: "18035", prof: "A definir", sala: "S204", horario: [{dia: 3, bloques: [3]}] }
             ]
         },
         {
-            id: "ORG_TEO", nombre: "QCA. ORGÁNICA (TEO)", color: "#059669",
+            id: "ORG_TEO", nombre: "QCA. ORGÁNICA (TEO)", color: "#059669", // Verde
             secciones: [
-                { nrc: "12715", prof: "Carlos Escobar", sala: "O001", horario: [{dia: 2, start: 8.5, end: 9.8}] },
-                { nrc: "12716", prof: "Carolina Olea", sala: "O002", horario: [{dia: 2, start: 8.5, end: 9.8}] },
-                { nrc: "12717", prof: "Paul Silva", sala: "P204", horario: [{dia: 2, start: 8.5, end: 9.8}] }
+                { nrc: "12715", prof: "Carlos Escobar", sala: "O001", horario: [{dia: 2, bloques: [1]}] }, // Martes 8:00
+                { nrc: "12716", prof: "Carolina Olea", sala: "O002", horario: [{dia: 2, bloques: [1]}] },
+                { nrc: "12717", prof: "Paul Silva", sala: "P204", horario: [{dia: 2, bloques: [1]}] }
             ]
         },
         {
-            id: "ORG_LAB", nombre: "QCA. ORGÁNICA (LAB)", color: "#10b981",
+            id: "ORG_LAB", nombre: "QCA. ORGÁNICA (LAB)", color: "#10b981", // Verde Claro
             secciones: [
-                { nrc: "12720", prof: "Carolina Olea", sala: "Lab D209", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "12722", prof: "Carolina Olea", sala: "D209", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "16525", prof: "Mitchell Bacho", sala: "Lab D205", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "16526", prof: "Mitchell Bacho", sala: "Lab D205", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "12723", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "12724", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "12726", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, start: 10.0, end: 13.0}] },
-                { nrc: "12727", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, start: 10.0, end: 13.0}] }
+                // Martes 10:00 a 13:00 (Bloque 2 + un poco del 3, o Bloque 2 y 3 completos?)
+                // Asumiremos Bloques 2 y 3 para cubrir el rango visualmente
+                { nrc: "12720", prof: "Carolina Olea", sala: "Lab D209", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "12722", prof: "Carolina Olea", sala: "D209", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "16525", prof: "Mitchell Bacho", sala: "Lab D205", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "16526", prof: "Mitchell Bacho", sala: "Lab D205", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "12723", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "12724", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "12726", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, bloques: [2, 3]}] },
+                { nrc: "12727", prof: "Paul Silva", sala: "Lab D209", horario: [{dia: 2, bloques: [2, 3]}] }
             ]
         },
         {
-            id: "ANA_TEO", nombre: "QCA. ANALÍTICA (TEO)", color: "#7c3aed",
+            id: "ANA_TEO", nombre: "QCA. ANALÍTICA (TEO)", color: "#7c3aed", // Violeta
             secciones: [
-                { nrc: "12541", prof: "Juan Carlos Santos", sala: "O002", horario: [{dia: 4, start: 8.5, end: 9.8}] },
-                { nrc: "12542", prof: "Paulina Godoy", sala: "O001", horario: [{dia: 4, start: 8.5, end: 9.8}] },
-                { nrc: "16510", prof: "Loreto Villacura", sala: "P202", horario: [{dia: 4, start: 8.5, end: 9.8}] }
+                { nrc: "12541", prof: "Juan Carlos Santos", sala: "O002", horario: [{dia: 4, bloques: [1]}] }, // Jueves 8:00
+                { nrc: "12542", prof: "Paulina Godoy", sala: "O001", horario: [{dia: 4, bloques: [1]}] },
+                { nrc: "16510", prof: "Loreto Villacura", sala: "P202", horario: [{dia: 4, bloques: [1]}] }
             ]
         },
         {
             id: "ANA_LAB", nombre: "QCA. ANALÍTICA (LAB)", color: "#8b5cf6",
             secciones: [
-                { nrc: "12548", prof: "Gabriela Maturana", sala: "Lab D209", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "12549", prof: "Paulina Godoy", sala: "Lab D206", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "12550", prof: "Maria Paz Oyarzún", sala: "Lab D209", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "12551", prof: "Gabriela Maturana", sala: "D206", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "16511", prof: "Anita Cataldo", sala: "Lab D209", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "16512", prof: "Alejandra Molina", sala: "Lab D206", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "16513", prof: "Gabriela Maturana", sala: "Lab D206", horario: [{dia: 4, start: 10.0, end: 13.0}] },
-                { nrc: "16514", prof: "Andrés Ochoa", sala: "Lab D209", horario: [{dia: 4, start: 10.0, end: 13.0}] }
+                { nrc: "12548", prof: "Gabriela Maturana", sala: "Lab D209", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "12549", prof: "Paulina Godoy", sala: "Lab D206", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "12550", prof: "Maria Paz Oyarzún", sala: "Lab D209", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "12550_2", prof: "Gabriela Maturana", sala: "D206", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "16511", prof: "Anita Cataldo", sala: "Lab D209", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "16512", prof: "Alejandra Molina", sala: "Lab D206", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "16513", prof: "Gabriela Maturana", sala: "Lab D206", horario: [{dia: 4, bloques: [2, 3]}] },
+                { nrc: "16514", prof: "Andrés Ochoa", sala: "Lab D209", horario: [{dia: 4, bloques: [2, 3]}] }
             ]
         },
         {
-            id: "FISQ_TEO", nombre: "FISICOQUÍMICA (TEO)", color: "#db2777",
+            id: "FISQ_TEO", nombre: "FISICOQUÍMICA (TEO)", color: "#db2777", // Rosa
             secciones: [
-                { nrc: "12738", prof: "Juan Carlos Santos", sala: "S005", horario: [{dia: 1, start: 14.5, end: 16.0}] },
-                { nrc: "12739", prof: "Patricia Pérez", sala: "O002", horario: [{dia: 1, start: 14.5, end: 16.0}] },
-                { nrc: "12740", prof: "Eduardo Chamorro", sala: "O001", horario: [{dia: 1, start: 14.5, end: 16.0}] }
+                { nrc: "12738", prof: "Juan Carlos Santos", sala: "S005", horario: [{dia: 1, bloques: [5]}] }, // Lunes 14:40
+                { nrc: "12739", prof: "Patricia Pérez", sala: "O002", horario: [{dia: 1, bloques: [5]}] },
+                { nrc: "12740", prof: "Eduardo Chamorro", sala: "O001", horario: [{dia: 1, bloques: [5]}] }
             ]
         },
         {
             id: "FISQ_LAB", nombre: "FISICOQUÍMICA (LAB)", color: "#ec4899",
             secciones: [
-                { nrc: "12742", prof: "Germán Barriga", sala: "Lab D204", horario: [{dia: 1, start: 16.1, end: 19.0}] },
-                { nrc: "12743", prof: "Germán Barriga", sala: "Lab D204", horario: [{dia: 1, start: 16.1, end: 19.0}] },
-                { nrc: "12744", prof: "María Paz Oyarzún", sala: "Lab D205", horario: [{dia: 1, start: 16.1, end: 19.0}] },
-                { nrc: "12745", prof: "María Paz Oyarzún", sala: "Lab D205", horario: [{dia: 1, start: 16.1, end: 19.0}] },
-                { nrc: "13527", prof: "A definir", sala: "Lab D204", horario: [{dia: 1, start: 16.1, end: 19.0}] },
-                { nrc: "12746", prof: "Andrés Ochoa", sala: "Lab D205", horario: [{dia: 1, start: 16.1, end: 19.0}] },
-                { nrc: "12747", prof: "Andrés Ochoa", sala: "Lab D205", horario: [{dia: 1, start: 16.1, end: 19.0}] }
+                // 16:10 en adelante (Bloque 6 y 7)
+                { nrc: "12742", prof: "Germán Barriga", sala: "Lab D204", horario: [{dia: 1, bloques: [6, 7]}] },
+                { nrc: "12743", prof: "Germán Barriga", sala: "Lab D204", horario: [{dia: 1, bloques: [6, 7]}] },
+                { nrc: "12744", prof: "María Paz Oyarzún", sala: "Lab D205", horario: [{dia: 1, bloques: [6, 7]}] },
+                { nrc: "12745", prof: "María Paz Oyarzún", sala: "Lab D205", horario: [{dia: 1, bloques: [6, 7]}] },
+                { nrc: "13527", prof: "A definir", sala: "Lab D204", horario: [{dia: 1, bloques: [6, 7]}] },
+                { nrc: "12746", prof: "Andrés Ochoa", sala: "Lab D205", horario: [{dia: 1, bloques: [6, 7]}] },
+                { nrc: "12747", prof: "Andrés Ochoa", sala: "Lab D205", horario: [{dia: 1, bloques: [6, 7]}] }
             ]
         }
     ];
 
     // ==========================================
-    // LOGICA DE RENDERIZADO
+    // 3. LÓGICA DE RENDERIZADO (NO TOCAR)
     // ==========================================
-    const startHour = 8;
-    const endHour = 20;
-    const days = ["Hora", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    
-    // Iniciar Grilla
     const grid = document.getElementById('grid');
+    const controls = document.getElementById('controls');
+    const days = ["Hora", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+    // 1. Crear Headers
     days.forEach(d => {
         const div = document.createElement('div');
         div.className = 'cell-header';
@@ -225,34 +261,38 @@
         grid.appendChild(div);
     });
 
-    for(let h=startHour; h<endHour; h++){
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'cell-time';
-        timeDiv.innerText = `${h}:00`;
-        timeDiv.style.gridRow = h - startHour + 2;
-        timeDiv.style.gridColumn = 1;
-        grid.appendChild(timeDiv);
+    // 2. Crear Celdas y Tiempos
+    bloquesHorarios.forEach((timeString, index) => {
+        const rowIndex = index + 2; // +2 por header
+        
+        // Columna de Tiempo
+        const timeCell = document.createElement('div');
+        timeCell.className = 'cell-time';
+        timeCell.innerText = timeString;
+        timeCell.style.gridRow = rowIndex;
+        timeCell.style.gridColumn = 1;
+        grid.appendChild(timeCell);
 
-        for(let d=1; d<=6; d++){
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'cell-day';
-            dayDiv.dataset.day = d;
-            dayDiv.dataset.hour = h;
-            dayDiv.style.gridRow = h - startHour + 2;
-            dayDiv.style.gridColumn = d + 1;
-            grid.appendChild(dayDiv);
+        // Celdas de Días
+        for (let d = 1; d <= 6; d++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell-day';
+            cell.dataset.day = d;
+            cell.dataset.block = index + 1; // Bloque ID
+            cell.style.gridRow = rowIndex;
+            cell.style.gridColumn = d + 1;
+            grid.appendChild(cell);
         }
-    }
+    });
 
-    // Iniciar Controles
-    const controls = document.getElementById('controls');
+    // 3. Generar Controles
     materias.forEach(mat => {
         const card = document.createElement('div');
         card.className = 'subject-card';
         card.innerHTML = `<label class="subject-title" style="color:${mat.color}">${mat.nombre}</label>`;
         
         const select = document.createElement('select');
-        select.innerHTML = '<option value="">-- Seleccionar NRC --</option>';
+        select.innerHTML = '<option value="">-- Seleccionar --</option>';
         mat.secciones.forEach(sec => {
             select.innerHTML += `<option value="${sec.nrc}">NRC ${sec.nrc}</option>`;
         });
@@ -261,41 +301,40 @@
         info.className = 'info-box';
 
         select.addEventListener('change', (e) => {
-            // Limpiar bloques anteriores de esta materia
-            document.querySelectorAll(`.block-${mat.id}`).forEach(b => b.remove());
-            
             const nrc = e.target.value;
+            
+            // Borrar bloques previos de esta asignatura
+            document.querySelectorAll(`.block-${mat.id}`).forEach(b => b.remove());
+            info.style.display = 'none';
+
             const sec = mat.secciones.find(s => s.nrc === nrc);
             
             if(sec) {
+                // Actualizar Info Box
                 info.innerHTML = `<strong>Prof:</strong> ${sec.prof}<br><strong>Sala:</strong> ${sec.sala}`;
-                info.className = 'info-box active';
-                
-                // Renderizar bloques
+                info.style.display = 'block';
+                info.style.borderLeftColor = mat.color;
+
+                // Renderizar en Grilla
                 sec.horario.forEach(h => {
-                    const block = document.createElement('div');
-                    block.className = `class-block block-${mat.id}`;
-                    block.style.backgroundColor = mat.color;
-                    block.innerHTML = `
-                        <div class="block-title">${mat.nombre.split('(')[0]}</div>
-                        <div class="block-detail">NRC ${sec.nrc} | ${sec.sala}</div>
-                        <div class="block-detail">${sec.prof}</div>
-                    `;
-                    
-                    // Posicionamiento
-                    const rowBase = Math.floor(h.start);
-                    const cell = document.querySelector(`.cell-day[data-day="${h.dia}"][data-hour="${rowBase}"]`);
-                    
-                    if(cell) {
-                        const top = (h.start - rowBase) * 100;
-                        const height = (h.end - h.start) * 100;
-                        block.style.top = `${top}%`;
-                        block.style.height = `${height}%`;
-                        cell.appendChild(block);
-                    }
+                    h.bloques.forEach(bloqueNum => {
+                        const cell = document.querySelector(`.cell-day[data-day="${h.dia}"][data-block="${bloqueNum}"]`);
+                        if(cell) {
+                            const block = document.createElement('div');
+                            block.className = `class-block block-${mat.id}`;
+                            block.style.backgroundColor = mat.color;
+                            
+                            // Solo mostramos texto completo si es el primer bloque del grupo, o simplificado
+                            block.innerHTML = `
+                                <div class="block-title">${mat.nombre.split('(')[0]}</div>
+                                <div class="block-detail">${sec.prof}</div>
+                                <div class="block-detail">Sala ${sec.sala}</div>
+                                <div class="block-nrc">NRC ${sec.nrc}</div>
+                            `;
+                            cell.appendChild(block);
+                        }
+                    });
                 });
-            } else {
-                info.className = 'info-box';
             }
         });
 
